@@ -7,6 +7,7 @@ const Login = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -20,9 +21,7 @@ const Login = () => {
 
     if (!formData.email) {
       newErrors.email = "Email is required";
-    } else if (
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
-    ) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Invalid email format";
     }
 
@@ -36,52 +35,45 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  // ✅ ONLY ONE handleSubmit
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!validate()) return;
 
-   const handleSubmit = async (e) => {
-  e.preventDefault();
+    try {
+      setLoading(true);
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const res = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: 'include',
+        body: JSON.stringify(formData),
+      });
 
-  if (!validate()) return;
+      const data = await res.json();
 
-  try {
-    const res = await fetch("http://localhost:5000/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    });
+      if (!res.ok) {
+        setErrors({ general: data.message || "Login failed" });
+        return;
+      }
 
-    const data = await res.json();
+      // ✅ save login data
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
 
-    if (!res.ok) {
-      setErrors({ password: data.message });
-      return;
+      alert("Login successful 🎉");
+
+      setFormData({ email: "", password: "" });
+      setErrors({});
+    } catch (error) {
+      console.error("Login error:", error);
+      setErrors({ general: "Server error" });
+    } finally {
+      setLoading(false);
     }
-
-    // ✅ Save token
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
-
-    alert("Login successful 🎉");
-
-    setFormData({ email: "", password: "" });
-    setErrors({});
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-
-    // optional: clear form
-    setFormData({
-      email: "",
-      password: "",
-    });
-    setErrors({});
   };
 
   return (
@@ -91,7 +83,10 @@ const Login = () => {
           <h2 className="text-2xl font-bold text-center">Login</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email */}
+            {errors.general && (
+              <p className="text-error text-sm text-center">{errors.general}</p>
+            )}
+
             <div>
               <input
                 type="email"
@@ -106,7 +101,6 @@ const Login = () => {
               )}
             </div>
 
-            {/* Password */}
             <div>
               <input
                 type="password"
@@ -121,16 +115,14 @@ const Login = () => {
               )}
             </div>
 
-            <button className="btn btn-primary w-full">
-              Login
+            <button className="btn btn-primary w-full" disabled={loading}>
+              {loading ? "Logging in..." : "Login"}
             </button>
           </form>
 
           <p className="text-center text-sm mt-3">
             Don’t have an account?{" "}
-            <span className="link link-primary cursor-pointer">
-              Register
-            </span>
+            <span className="link link-primary cursor-pointer">Register</span>
           </p>
         </div>
       </div>

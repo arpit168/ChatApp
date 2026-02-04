@@ -10,69 +10,89 @@ const Register = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const validate = () => {
     let newErrors = {};
 
-    if (!formData.fullName.trim()) {
+    if (!formData.fullName.trim())
       newErrors.fullName = "Full name is required";
-    }
 
-    if (!formData.email) {
+    if (!formData.email)
       newErrors.email = "Email is required";
-    } else if (
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
-    ) {
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
       newErrors.email = "Invalid email format";
-    }
 
-    if (!formData.mobileNumber) {
+    if (!formData.mobileNumber)
       newErrors.mobileNumber = "Mobile number is required";
-    } else if (!/^[6-9]\d{9}$/.test(formData.mobileNumber)) {
+    else if (!/^[6-9]\d{9}$/.test(formData.mobileNumber))
       newErrors.mobileNumber = "Invalid mobile number";
-    }
 
-    if (!formData.password) {
+    if (!formData.password)
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
+    else if (formData.password.length < 6)
       newErrors.password = "Password must be at least 6 characters";
-    }
 
-    if (!formData.confirmPassword) {
+    if (!formData.confirmPassword)
       newErrors.confirmPassword = "Confirm password is required";
-    } else if (formData.password !== formData.confirmPassword) {
+    else if (formData.password !== formData.confirmPassword)
       newErrors.confirmPassword = "Passwords do not match";
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  // ✅ CONNECTED TO BACKEND
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validate()) return;
 
-    console.log("Register Data:", formData);
-    alert("Registered successfully 🎉");
+    try {
+      setLoading(true);
 
-    // ✅ Clear form after successful register
-    setFormData({
-      fullName: "",
-      email: "",
-      mobileNumber: "",
-      password: "",
-      confirmPassword: "",
-    });
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const res = await fetch(`${API_URL}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: 'include',
+        body: JSON.stringify(formData),
+      });
 
-    setErrors({});
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrors({ general: data.message });
+        return;
+      }
+
+      // Save token/user if returned and notify
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+
+      alert("Registered successfully 🎉");
+
+      setFormData({
+        fullName: "",
+        email: "",
+        mobileNumber: "",
+        password: "",
+        confirmPassword: "",
+      });
+
+      setErrors({});
+    } catch (error) {
+      console.error("Register error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -82,96 +102,79 @@ const Register = () => {
           <h2 className="text-2xl font-bold text-center">Create Account</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Full Name */}
-            <div>
-              <input
-                type="text"
-                name="fullName"
-                placeholder="Full Name"
-                className="input input-bordered w-full"
-                value={formData.fullName}
-                onChange={handleChange}
-              />
-              {errors.fullName && (
-                <p className="text-error text-sm">{errors.fullName}</p>
-              )}
-            </div>
+            {errors.general && (
+              <p className="text-error text-sm text-center">{errors.general}</p>
+            )}
 
-            {/* Email */}
-            <div>
-              <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                className="input input-bordered w-full"
-                value={formData.email}
-                onChange={handleChange}
-              />
-              {errors.email && (
-                <p className="text-error text-sm">{errors.email}</p>
-              )}
-            </div>
+            <input
+              type="text"
+              name="fullName"
+              placeholder="Full Name"
+              className="input input-bordered w-full"
+              value={formData.fullName}
+              onChange={handleChange}
+            />
+            {errors.fullName && (
+              <p className="text-error text-sm">{errors.fullName}</p>
+            )}
 
-            {/* Mobile Number */}
-            <div>
-              <input
-                type="text"
-                name="mobileNumber"
-                placeholder="Mobile Number"
-                className="input input-bordered w-full"
-                value={formData.mobileNumber}
-                onChange={handleChange}
-              />
-              {errors.mobileNumber && (
-                <p className="text-error text-sm">
-                  {errors.mobileNumber}
-                </p>
-              )}
-            </div>
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              className="input input-bordered w-full"
+              value={formData.email}
+              onChange={handleChange}
+            />
+            {errors.email && (
+              <p className="text-error text-sm">{errors.email}</p>
+            )}
 
-            {/* Password */}
-            <div>
-              <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                className="input input-bordered w-full"
-                value={formData.password}
-                onChange={handleChange}
-              />
-              {errors.password && (
-                <p className="text-error text-sm">{errors.password}</p>
-              )}
-            </div>
+            <input
+              type="text"
+              name="mobileNumber"
+              placeholder="Mobile Number"
+              className="input input-bordered w-full"
+              value={formData.mobileNumber}
+              onChange={handleChange}
+            />
+            {errors.mobileNumber && (
+              <p className="text-error text-sm">{errors.mobileNumber}</p>
+            )}
 
-            {/* Confirm Password */}
-            <div>
-              <input
-                type="password"
-                name="confirmPassword"
-                placeholder="Confirm Password"
-                className="input input-bordered w-full"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-              />
-              {errors.confirmPassword && (
-                <p className="text-error text-sm">
-                  {errors.confirmPassword}
-                </p>
-              )}
-            </div>
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              className="input input-bordered w-full"
+              value={formData.password}
+              onChange={handleChange}
+            />
+            {errors.password && (
+              <p className="text-error text-sm">{errors.password}</p>
+            )}
 
-            <button className="btn btn-primary w-full">
-              Register
+            <input
+              type="password"
+              name="confirmPassword"
+              placeholder="Confirm Password"
+              className="input input-bordered w-full"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+            />
+            {errors.confirmPassword && (
+              <p className="text-error text-sm">
+                {errors.confirmPassword}
+              </p>
+            )}
+
+            <button
+              className="btn btn-primary w-full"
+              disabled={loading}
+            >
+              {loading ? "Registering..." : "Register"}
             </button>
           </form>
-
-          <p className="text-center text-sm mt-3">
-            Already have an account?{" "}
-            <span className="link link-primary cursor-pointer">
-              Login
-            </span>
-          </p>
         </div>
       </div>
     </div>
