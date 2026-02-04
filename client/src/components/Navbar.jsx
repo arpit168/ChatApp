@@ -1,26 +1,63 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
+  const [theme, setTheme] = useState("");
+
+  const handleThemeChange = (event) => {
+    setTheme(event.target.value);
+    localStorage.setItem("chatKaroTheme", event.target.value);
+    document.documentElement.setAttribute("data-theme", event.target.value);
+  };
+
+  useEffect(() => {
+    const currentTheme = localStorage.getItem("chatKaroTheme");
+    document.documentElement.setAttribute("data-theme", currentTheme);
+    setTheme(currentTheme);
+  }, []);
+
   return (
-    <div className="bg-primary flex justify-between">
-      <h1>Chat Karo</h1>
-      <div className="flex gap-2">
-        <div>HOME</div>
-        <div>ABOUT</div>
+    <>
+      <div className="bg-primary flex justify-between px-5 py-2 text-center sticky top-0 z-50">
+        <h1>ChatKaro</h1>
+        <div className="space-x-2">
+          <span>Home</span>
+          <span>About</span>
+        </div>
+
+        <div className="flex gap-3 ">
+          <button className="btn btn-secondary"><Link to={"/login"}>Login</Link></button>
+           <button className="btn btn-secondary"><Link to={"/register"}>Register</Link></button>
+
+          <select
+            name="theme"
+            id="theme"
+            className="select"
+            onChange={handleThemeChange}
+            value={theme}
+          >
+            <option value="">Default</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="claude">Claude</option>
+            <option value="spotify">Spotify</option>
+            <option value="vscode">VSCode</option>
+            <option value="black">Black</option>
+            <option value="corporate">Corporate</option>
+            <option value="ghibli">Ghibli</option>
+            <option value="gourmet">Gourmet</option>
+            <option value="luxury">Luxury</option>
+            <option value="mintlify">Mintlify</option>
+            <option value="pastel">Pastel</option>
+            <option value="perplexity">Perplexity</option>
+            <option value="shadcn">Shadcn</option>
+            <option value="slack">Slack</option>
+            <option value="soft">Soft</option>
+            <option value="valorant">Valorant</option>
+          </select>
+        </div>
       </div>
-      <div className="flex gap-5">
-        <button className="btn btn-secondary">Login</button>
-        <select name="theme" id="theme" className="select ">
-          <option value="">--Select Theme--</option>
-          <option value=""></option>
-          <option value=""></option>
-          <option value=""></option>
-          <option value=""></option>
-          <option value=""></option>
-          <option value=""></option>
-        </select>
-      </div>
-    </div>
+    </>
   );
 };
 
