@@ -4,7 +4,13 @@ import jwt from "jsonwebtoken";
 
 export const loginUser = async (req, res) => {
   try {
+    console.log("loginUser body:", req.body);
+
     const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
 
     const user = await User.findOne({ email });
     if (!user)
@@ -43,6 +49,7 @@ export const loginUser = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("loginUser error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -52,6 +59,7 @@ export const loginUser = async (req, res) => {
 
 export const registerUser = async (req, res) => {
   try {
+    console.log("registerUser body:", req.body);
     const { fullName, email, mobileNumber, password } = req.body;
 
     if (!fullName || !email || !mobileNumber || !password)
@@ -114,7 +122,7 @@ export const registerUser = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(error);
+    console.error("registerUser error:", error && error.message, error && error.stack);
     res.status(500).json({ message: "Server error" });
   }
 };

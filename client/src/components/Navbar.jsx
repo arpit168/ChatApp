@@ -2,19 +2,22 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 const Navbar = () => {
-  const [theme, setTheme] = useState("");
+  const [theme, setTheme] = useState(() => localStorage.getItem("chatKaroTheme") || "");
 
   const handleThemeChange = (event) => {
-    setTheme(event.target.value);
-    localStorage.setItem("chatKaroTheme", event.target.value);
-    document.documentElement.setAttribute("data-theme", event.target.value);
+    const newTheme = event.target.value;
+    setTheme(newTheme);
+    localStorage.setItem("chatKaroTheme", newTheme);
+    document.documentElement.setAttribute("data-theme", newTheme);
   };
 
   useEffect(() => {
-    const currentTheme = localStorage.getItem("chatKaroTheme");
-    document.documentElement.setAttribute("data-theme", currentTheme);
-    setTheme(currentTheme);
-  }, []);
+    if (theme) {
+      document.documentElement.setAttribute("data-theme", theme);
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
+  }, [theme]);
 
   return (
     <>
